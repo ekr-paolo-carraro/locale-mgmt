@@ -1,0 +1,255 @@
+openapi: '3.0.3'
+info:
+  title: locale-mgmt api
+  version: '1.0'
+  contact:
+    name: github.com/ekr-paolo-carraro
+servers:
+  - url: https://locale-mgmt.herokuapp.com
+    description: main server public
+  - url: http://localhost:3000
+    description: local server for test
+
+
+tags:
+  - name: 'locale-item'
+  - name: 'locale-item-field-list'
+  - name: 'string-msg'
+
+
+components:
+  schemas:
+    locale-item:
+      type: object
+      properties:
+        bundle:
+          description: repository/context for the key; it's part of primary key
+          type: string
+          example: alert_messages
+        key:
+          description: key used in software to get the translation for UI
+          type: string
+          example: ALERT_FOR_BAD_SETTING
+        lang:
+          description: language which text is translated
+          type: string
+          example: en_US
+        text:
+          description: content text 
+          type: string
+          example: This setting are not correct. Contact admin for info.
+
+
+paths:
+  /test:
+    get:
+      summary: Return a string of welcome to test that server is responding
+      operationId: testServer
+      tags:
+        - string-msg
+      responses:
+        '200':
+          description: OK server responding
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: 
+                  response:
+                    type: string
+                    example: Hello, server is working
+
+
+  /version:
+    get:
+      summary: Return the service version 
+      operationId: getVersion
+      tags:
+        - string-msg
+      responses:
+        '200':
+          description: OK server return a version
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: 
+                  version:
+                    type: string
+                    example: 1.0.0
+
+
+  /bundles:
+    get:
+      summary: Return all bundle on db
+      operationId: getBundles
+      tags:
+        - locale-item-field-list
+      responses:
+        '200':
+          description: A list of every bundle present in db
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  type: string  
+
+
+  /langs:
+    get:
+      summary: Return all langs on db
+      operationId: getLangs
+      tags:
+        - locale-item-field-list
+      responses:
+        '200':
+          description: A list of every lang present in db
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  type: string
+
+
+  /locale-item:
+    post:
+      summary: Insert one new locale-item in db
+      operationId: postLocaleItem
+      tags:
+        - locale-item
+      requestBody:
+        description: locale item to insert in db
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/locale-item'
+      responses:
+        '201':
+          description: Locale-item succesfully inserted
+          content:
+            application/json:
+              schema: 
+                $ref: '#/components/schemas/locale-item'
+
+
+
+  /locale-items:
+    post:
+      summary: Insert an array of locale-item in db
+      operationId: postLocaleItems
+      tags:
+        - locale-item
+      requestBody:
+        description: array of locale-items to insert in db
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/locale-item'
+      responses:
+        '201':
+          description: Locale-items succesfully inserted
+          content:
+            application/json:
+              schema: 
+                type: object
+                properties:
+                  added-items-num: 
+                    type: integer
+                    format: int32
+                  updated-items-num:
+                    type: integer
+                    format: int32
+
+
+
+
+  /locale-items/{bundle}:
+    get:
+      summary: Return all locale items for specific bundle
+      operationId: getLocaleItemByBundle
+      tags:
+        - locale-item
+      parameters:
+        - in: path
+          name: bundle
+          description: the name of bundle to get
+          required: true
+          schema: 
+            type: string
+      responses:
+        '200':
+          description: A list of locale items for given bundle
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/locale-item'
+
+
+  /locale-items/{bundle}/lang/{langId}:
+    get:
+      summary: Return all locale-item sfor given bundle and lang
+      operationId: getLocaleItemByBundleAndLang
+      tags:
+        - locale-item
+      parameters:
+        - in: path
+          name: bundle
+          description: the name of bundle to get
+          required: true
+          schema: 
+            type: string
+        - in: path
+          name: langId
+          description: the id of lang
+          required: true
+          schema: 
+            type: string
+      responses:
+        '200':
+          description: A locale items for given bundle and lang
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/locale-item'
+
+
+  /locale-items/{bundle}/key/{keyId}:
+    get:
+      summary: Return all langs locale-items for given bundle and key
+      operationId: getLocaleItemByBundleAndKey
+      tags:
+        - locale-item
+      parameters:
+        - in: path
+          name: bundle
+          description: the name of bundle to get
+          required: true
+          schema: 
+            type: string
+        - in: path
+          name: keyId
+          description: the key of single locale-item
+          required: true
+          schema: 
+            type: string
+      responses:
+        '200':
+          description: A locale items for given bundle and eky
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/locale-item'
+
+
