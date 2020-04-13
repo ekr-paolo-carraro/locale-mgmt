@@ -1,9 +1,19 @@
 package main
 
 import (
-	"fmt"
+	"log"
+
+	"github.com/ekr-paolo-carraro/locale-mgmt/pkg/handling"
+	"github.com/ekr-paolo-carraro/locale-mgmt/pkg/session"
 )
 
 func main() {
-	fmt.Println("hi")
+
+	err := session.InitSessionStorage()
+	if err != nil {
+		log.Println(err.Error())
+	}
+
+	log.Println(handling.NewHandler(nil))
+
 }

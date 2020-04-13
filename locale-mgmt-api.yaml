@@ -38,7 +38,13 @@ components:
           description: content text 
           type: string
           example: This setting are not correct. Contact admin for info.
-
+  # securitySchemes:
+  #   OAuth2:
+  #     type: oauth2
+  #     flows:
+  #       authorizationCode:
+  #         authorizationUrl: https://silent-thunder-6124.eu.auth0.com/
+  #         tokenUrl: 
 
 paths:
   /test:
@@ -79,7 +85,7 @@ paths:
                     example: 1.0.0
 
 
-  /bundles:
+  api/v1/bundles:
     get:
       summary: Return all bundle on db
       operationId: getBundles
@@ -96,7 +102,7 @@ paths:
                   type: string  
 
 
-  /langs:
+  api/v1/langs:
     get:
       summary: Return all langs on db
       operationId: getLangs
@@ -113,7 +119,7 @@ paths:
                   type: string
 
 
-  /locale-item:
+  api/v1/locale-item:
     post:
       summary: Insert one new locale-item in db
       operationId: postLocaleItem
@@ -136,7 +142,7 @@ paths:
 
 
 
-  /locale-items:
+  api/v1/locale-items:
     post:
       summary: Insert an array of locale-item in db
       operationId: postLocaleItems
@@ -169,7 +175,7 @@ paths:
 
 
 
-  /locale-items/{bundle}:
+  api/v1/locale-items/{bundle}:
     get:
       summary: Return all locale items for specific bundle
       operationId: getLocaleItemByBundle
@@ -193,7 +199,7 @@ paths:
                   $ref: '#/components/schemas/locale-item'
 
 
-  /locale-items/{bundle}/lang/{langId}:
+  api/v1/locale-items/{bundle}/lang/{langId}:
     get:
       summary: Return all locale-item sfor given bundle and lang
       operationId: getLocaleItemByBundleAndLang
@@ -223,7 +229,7 @@ paths:
                   $ref: '#/components/schemas/locale-item'
 
 
-  /locale-items/{bundle}/key/{keyId}:
+  api/v1/locale-items/{bundle}/key/{keyId}:
     get:
       summary: Return all langs locale-items for given bundle and key
       operationId: getLocaleItemByBundleAndKey
