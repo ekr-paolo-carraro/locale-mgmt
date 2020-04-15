@@ -1,7 +1,7 @@
 openapi: '3.0.3'
 info:
   title: locale-mgmt api
-  version: '1.0'
+  version: '1.0.0'
   contact:
     name: github.com/ekr-paolo-carraro
 servers:
@@ -15,6 +15,7 @@ tags:
   - name: 'locale-item'
   - name: 'locale-item-field-list'
   - name: 'string-msg'
+  - name: 'info-data'
 
 
 components:
@@ -38,19 +39,22 @@ components:
           description: content text 
           type: string
           example: This setting are not correct. Contact admin for info.
-  # securitySchemes:
-  #   OAuth2:
-  #     type: oauth2
-  #     flows:
-  #       authorizationCode:
-  #         authorizationUrl: https://silent-thunder-6124.eu.auth0.com/
-  #         tokenUrl: 
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: http://localhost:3000/login
+          tokenUrl: http://localhost:3000/login
+          scopes:
+            read: intended for search api
+            write: intended for complete manage
 
 paths:
-  /test:
+  /welcome:
     get:
       summary: Return a string of welcome to test that server is responding
-      operationId: testServer
+      operationId: welcomeServer
       tags:
         - string-msg
       responses:
@@ -66,15 +70,17 @@ paths:
                     example: Hello, server is working
 
 
-  /version:
+  /info:
     get:
-      summary: Return the service version 
-      operationId: getVersion
+      summary: Return the service version and user authenticated info 
+      operationId: getInfo
       tags:
-        - string-msg
+        - 'info-data'
+      security:
+        - OAuth2: [read] 
       responses:
         '200':
-          description: OK server return a version
+          description: OK server return version and info user data
           content:
             application/json:
               schema:
@@ -83,14 +89,18 @@ paths:
                   version:
                     type: string
                     example: 1.0.0
+                  user: 
+                    type: object
 
 
-  api/v1/bundles:
+  /api/v1/bundles:
     get:
       summary: Return all bundle on db
       operationId: getBundles
       tags:
         - locale-item-field-list
+      security:
+        - OAuth2: [read]
       responses:
         '200':
           description: A list of every bundle present in db
@@ -102,12 +112,14 @@ paths:
                   type: string  
 
 
-  api/v1/langs:
+  /api/v1/langs:
     get:
       summary: Return all langs on db
       operationId: getLangs
       tags:
         - locale-item-field-list
+      security:
+        - OAuth2: [read]
       responses:
         '200':
           description: A list of every lang present in db
@@ -119,12 +131,14 @@ paths:
                   type: string
 
 
-  api/v1/locale-item:
+  /api/v1/locale-item:
     post:
       summary: Insert one new locale-item in db
       operationId: postLocaleItem
       tags:
         - locale-item
+      security:
+        - OAuth2: [write]
       requestBody:
         description: locale item to insert in db
         required: true
@@ -142,12 +156,14 @@ paths:
 
 
 
-  api/v1/locale-items:
+  /api/v1/locale-items:
     post:
       summary: Insert an array of locale-item in db
       operationId: postLocaleItems
       tags:
         - locale-item
+      security:
+        - OAuth2: [write]
       requestBody:
         description: array of locale-items to insert in db
         required: true
@@ -175,12 +191,14 @@ paths:
 
 
 
-  api/v1/locale-items/{bundle}:
+  /api/v1/locale-items/{bundle}:
     get:
       summary: Return all locale items for specific bundle
       operationId: getLocaleItemByBundle
       tags:
         - locale-item
+      security:
+        - OAuth2: [read]
       parameters:
         - in: path
           name: bundle
@@ -199,12 +217,14 @@ paths:
                   $ref: '#/components/schemas/locale-item'
 
 
-  api/v1/locale-items/{bundle}/lang/{langId}:
+  /api/v1/locale-items/{bundle}/lang/{langId}:
     get:
       summary: Return all locale-item sfor given bundle and lang
       operationId: getLocaleItemByBundleAndLang
       tags:
         - locale-item
+      security:
+        - OAuth2: [read]
       parameters:
         - in: path
           name: bundle
@@ -229,12 +249,14 @@ paths:
                   $ref: '#/components/schemas/locale-item'
 
 
-  api/v1/locale-items/{bundle}/key/{keyId}:
+  /api/v1/locale-items/{bundle}/key/{keyId}:
     get:
       summary: Return all langs locale-items for given bundle and key
       operationId: getLocaleItemByBundleAndKey
       tags:
         - locale-item
+      security:
+        - OAuth2: [read]
       parameters:
         - in: path
           name: bundle
@@ -257,5 +279,3 @@ paths:
                 type: array
                 items: 
                   $ref: '#/components/schemas/locale-item'
-
-
