@@ -23,8 +23,12 @@ components:
     locale-item:
       type: object
       properties:
+        id:
+          description: primary key
+          type: string
+          example: 1324-567-8900
         bundle:
-          description: repository/context for the key; it's part of primary key
+          description: repository/context for the key; it's part of unique key
           type: string
           example: alert_messages
         key:
@@ -65,7 +69,7 @@ paths:
               schema:
                 type: object
                 properties: 
-                  response:
+                  message:
                     type: string
                     example: Hello, server is working
 
@@ -92,6 +96,25 @@ paths:
                   user: 
                     type: object
 
+
+  /api/v1/restricted:
+    get:
+      summary: It's a test endpoint to test if authorization works
+      operationId: getRestricted
+      tags:
+        - 'info-data'
+      security:
+       - OAuth2: [read]
+      responses:
+        '200':
+          description: A message that confirm it's authorizated
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: "Ok access granted"
 
   /api/v1/bundles:
     get:
@@ -129,6 +152,8 @@ paths:
                 type: array
                 items: 
                   type: string
+
+
 
 
   /api/v1/locale-item:
