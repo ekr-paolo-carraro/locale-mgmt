@@ -19,15 +19,23 @@ func NewHandler(delegate interface{}) error {
 
 	rh := gin.Default()
 
+	rh.GET("/welcome", welcomeHandler)
+	rh.GET("/", welcomeHandler)
+
 	rh.GET("/callback", authorizating.CallbackHandler)
 	rh.GET("/login", authorizating.LoginHandler)
 	rh.GET("/logout", authorizating.LogoutHandler)
-	rh.GET("/version", versionHandler)
+	rh.GET("/info", infoHandler)
+
+	apiGroup := rh.Group("/api/v1")
+	{
+		apiGroup.GET("/test", authorizating.AuthRequired(), testApiHandler)
+	}
 
 	return rh.Run(os.Getenv("PORT"))
 }
 
-func versionHandler(c *gin.Context) {
+func infoHandler(c *gin.Context) {
 	var msg map[string]interface{} = make(map[string]interface{})
 	msg["version"] = "0.0.1"
 
@@ -39,4 +47,12 @@ func versionHandler(c *gin.Context) {
 
 	msg["user"] = ss.Values["profile"]
 	c.JSON(http.StatusOK, msg)
+}
+
+func welcomeHandler(c *gin.Context) {
+	c.String(http.StatusOK, "Hello, server is working: don't know who you are so go to login")
+}
+
+func testApiHandler(c *gin.Context) {
+	c.String(http.StatusOK, "u r in protected area")
 }

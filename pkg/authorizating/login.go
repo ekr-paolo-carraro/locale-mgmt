@@ -3,9 +3,11 @@ package authorizating
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 
 	"github.com/ekr-paolo-carraro/locale-mgmt/pkg/session"
 	"github.com/gin-gonic/gin"
@@ -50,24 +52,30 @@ func LoginHandler(c *gin.Context) {
 //LogoutHandler manage logout call
 func LogoutHandler(c *gin.Context) {
 	domain := os.Getenv("OAUTH_PROVIDER")
-	logoutUrl, err := url.Parse("https://" + domain)
+	logoutUrl, err := url.Parse(domain)
 
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 
-	logoutUrl.Path += "/v2/logout"
+	logoutUrl.Path += "v2/logout"
 	params := url.Values{}
 
 	var protocol string
 	if c.Request.TLS == nil {
-		protocol = "http://"
+		protocol = "http"
 	} else {
-		protocol = "https://"
+		protocol = "https"
 	}
 
-	returnTo, err := url.Parse(protocol + c.Request.Host)
+	urlToReturn := c.Request.Host
+	if strings.Contains(urlToReturn, "http") == true {
+		urlToReturn = strings.Replace(urlToReturn, "http://", "", 0)
+		urlToReturn = strings.Replace(urlToReturn, "https://", "", 0)
+	}
+	log.Println(protocol + "://" + urlToReturn + "/welcome")
+	returnTo, err := url.Parse(protocol + "://" + urlToReturn + "/welcome")
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return

@@ -104,3 +104,20 @@ func CallbackHandler(c *gin.Context) {
 
 	c.Redirect(http.StatusSeeOther, "/version")
 }
+
+func AuthRequired() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ss, err := session.Store.Get(c.Request, "auth-session")
+		if err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
+
+		if _, ok := ss.Values["profile"]; !ok {
+			c.Redirect(http.StatusSeeOther, "/welcome")
+			return
+		}
+
+		c.Next()
+	}
+}
