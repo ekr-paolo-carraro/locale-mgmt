@@ -87,3 +87,18 @@ func LogoutHandler(c *gin.Context) {
 
 	c.Redirect(http.StatusTemporaryRedirect, logoutUrl.String())
 }
+
+//InfoHandler show version of server api and logged user info
+func InfoHandler(c *gin.Context) {
+	var msg map[string]interface{} = make(map[string]interface{})
+	msg["version"] = "0.0.1"
+
+	ss, err := session.Store.Get(c.Request, "auth-session")
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	msg["user"] = ss.Values["profile"]
+	c.JSON(http.StatusOK, msg)
+}
