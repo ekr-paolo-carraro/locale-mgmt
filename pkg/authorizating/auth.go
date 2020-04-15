@@ -3,6 +3,7 @@ package authorizating
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+//Autenticator is the class for authentication
 type Autenticator struct {
 	Provider *oidc.Provider
 	Config   oauth2.Config
@@ -44,7 +46,7 @@ func NewAutenticator() (*Autenticator, error) {
 	}, nil
 }
 
-//CallbackHandler manage callback call
+//CallbackHandler manage callback call by Auth0 provider
 func CallbackHandler(c *gin.Context) {
 
 	ss, err := session.Store.Get(c.Request, "auth-session")
@@ -105,6 +107,7 @@ func CallbackHandler(c *gin.Context) {
 	c.Redirect(http.StatusSeeOther, "/version")
 }
 
+//AuthRequired is the middleware to test if user is authenticated
 func AuthRequired() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ss, err := session.Store.Get(c.Request, "auth-session")
@@ -120,4 +123,21 @@ func AuthRequired() gin.HandlerFunc {
 
 		c.Next()
 	}
+}
+
+type GenericMessage struct {
+	Message string
+}
+
+//RestrictedHandler return if auth token is active
+func RestrictedHandler(c *gin.Context) {
+	ss, err := session.Store.Get(c.Request, "auth-session")
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	user := ss.Values["profile"].(map[string]interface{})
+	msg := GenericMessage{fmt.Sprintf("Hi %v You are in the restricte area", user["name"])}
+	c.JSON(http.StatusOK, msg)
 }
