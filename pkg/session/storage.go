@@ -12,7 +12,7 @@ var (
 	Store *sessions.FilesystemStore
 )
 
-//
+//InitSessionStorage startup storage for authentication
 func InitSessionStorage() error {
 
 	gotenv.Load()
