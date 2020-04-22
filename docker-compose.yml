@@ -1,0 +1,44 @@
+version: '3.5'
+
+services:
+  postgres:
+    container_name: postgres_container
+    image: postgres
+    environment:
+      POSTGRES_USER: srvuser
+      POSTGRES_PASSWORD: ekr
+      POSTGRES_DB: locale-mgmt
+      PGDATA: /data/postgres
+    volumes:
+       - pgdata:/data/postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - postgres
+    restart: unless-stopped
+  
+  pgadmin:
+    container_name: pgadmin_container
+    image: dpage/pgadmin4:latest
+    depends_on:
+        - postgres
+    environment:
+      PGADMIN_DEFAULT_EMAIL: paolo.carraro@ekr.it
+      PGADMIN_DEFAULT_PASSWORD: ekrekr
+      PGADMIN_LISTEN_PORT: 5050
+    volumes:
+      - type: bind
+        source: ./pgadmin-data
+        target: /var/lib/pgadmin
+    ports:
+      - "5050:5050"
+    networks:
+      - postgres
+    restart: unless-stopped
+
+networks:
+  postgres:
+    driver: bridge
+#host.docker.internal
+volumes:
+    pgdata:
