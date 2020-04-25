@@ -46,7 +46,9 @@ func LoginHandler(c *gin.Context) {
 		return
 	}
 
-	c.Redirect(http.StatusTemporaryRedirect, authenticator.Config.AuthCodeURL(state))
+	redirectLocation := authenticator.Config.AuthCodeURL(state)
+	log.Println(redirectLocation)
+	c.Redirect(http.StatusTemporaryRedirect, redirectLocation)
 }
 
 //LogoutHandler manage logout call

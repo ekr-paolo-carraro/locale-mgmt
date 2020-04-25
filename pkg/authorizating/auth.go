@@ -91,7 +91,7 @@ func CallbackHandler(c *gin.Context) {
 
 	var profile map[string]interface{}
 	if err := idToken.Claims(&profile); err != nil {
-		c.AbortWithError(http.StatusInternalServerError, errors.New("Failed to marshall token: "+err.Error()))
+		c.AbortWithError(http.StatusInternalServerError, errors.New("Failed to marshall profile: "+err.Error()))
 		return
 	}
 
@@ -104,7 +104,7 @@ func CallbackHandler(c *gin.Context) {
 		return
 	}
 
-	c.Redirect(http.StatusSeeOther, "/version")
+	c.Redirect(http.StatusSeeOther, "/info")
 }
 
 //AuthRequired is the middleware to test if user is authenticated
@@ -117,7 +117,7 @@ func AuthRequired() gin.HandlerFunc {
 		}
 
 		if _, ok := ss.Values["profile"]; !ok {
-			c.Redirect(http.StatusSeeOther, "/welcome")
+			c.Redirect(http.StatusTemporaryRedirect, "/welcome")
 			return
 		}
 
@@ -137,7 +137,10 @@ func RestrictedHandler(c *gin.Context) {
 		return
 	}
 
-	user := ss.Values["profile"].(map[string]interface{})
-	msg := GenericMessage{fmt.Sprintf("Hi %v You are in the restricte area", user["name"])}
+	user := map[string]interface{}{}
+	if ss.Values["profile"] != nil {
+		user = ss.Values["profile"].(map[string]interface{})
+	}
+	msg := GenericMessage{fmt.Sprintf("Hi %v You are in the restricted area", user["name"])}
 	c.JSON(http.StatusOK, msg)
 }
