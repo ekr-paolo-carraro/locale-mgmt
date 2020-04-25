@@ -36,5 +36,8 @@
 .history
 
 # End of https://www.gitignore.io/api/go,visualstudiocode
+
 pgadmin-data/*
 cmd/locale-mgmt/debug
+
+cmd/locale-mgmt/.env
