@@ -1,0 +1,1 @@
+INSERT INTO localeitems ( key, bundle, lang, content ) VALUES( $1,$2,$3,$4) RETURNING id;
