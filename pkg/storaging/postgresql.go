@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"io/ioutil"
+	"log"
 	"os"
 
 	_ "github.com/lib/pq"
@@ -25,6 +26,7 @@ type LocalePersistenceService struct {
 //NewPostgresPersistenceService return a new persistence service for postgresql db
 func NewPostgresPersistenceService() (*LocalePersistenceService, error) {
 	connStr := os.Getenv("DATABASE_URL")
+	log.Println(connStr)
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		return nil, err
@@ -35,7 +37,7 @@ func NewPostgresPersistenceService() (*LocalePersistenceService, error) {
 		return nil, err
 	}
 
-	initStmt, err := ioutil.ReadFile("../../pkg/storaging/sql/init.sql")
+	initStmt, err := ioutil.ReadFile("pkg/storaging/sql/init.sql")
 	_, err = db.Exec(string(initStmt))
 	if err != nil {
 		return nil, err
@@ -49,7 +51,7 @@ func NewPostgresPersistenceService() (*LocalePersistenceService, error) {
 //PostLocaleItem implements LocalePersistencer interface with postgresql implementation
 func (lps LocalePersistenceService) PostLocaleItem(item LocaleItem) (*LocaleItem, error) {
 
-	insertStmtStr, err := ioutil.ReadFile("../../pkg/storaging/sql/upsert.sql")
+	insertStmtStr, err := ioutil.ReadFile("pkg/storaging/sql/upsert.sql")
 	if err != nil {
 		return nil, err
 	}

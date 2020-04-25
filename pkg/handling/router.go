@@ -26,7 +26,6 @@ func NewHandler(delegate interface{}) error {
 	rh.GET("/logout", authorizating.LogoutHandler)
 
 	rh.GET("/info", authorizating.InfoHandler)
-
 	lph, err := storaging.NewPersistenceHandler()
 	if err != nil {
 		return err
@@ -38,7 +37,7 @@ func NewHandler(delegate interface{}) error {
 		apiGroup.POST("/locale-item", authorizating.AuthRequired(), lph.PostLocaleItemHandler)
 	}
 
-	return rh.Run(os.Getenv("PORT"))
+	return rh.Run(":" + os.Getenv("PORT"))
 }
 
 func welcomeHandler(c *gin.Context) {
