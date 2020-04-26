@@ -41,3 +41,4 @@ pgadmin-data/*
 cmd/locale-mgmt/debug
 
 cmd/locale-mgmt/.env
+.env

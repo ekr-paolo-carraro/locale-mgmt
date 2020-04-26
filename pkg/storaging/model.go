@@ -21,6 +21,7 @@ type LocaleItemHistory struct {
 	ModificationDate time.Time
 }
 
+//ErrorMessage rappresents error message
 type ErrorMessage struct {
 	Message string
 }

@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"errors"
 	"io/ioutil"
-	"log"
 	"os"
 
 	_ "github.com/lib/pq"
@@ -26,7 +25,6 @@ type LocalePersistenceService struct {
 //NewPostgresPersistenceService return a new persistence service for postgresql db
 func NewPostgresPersistenceService() (*LocalePersistenceService, error) {
 	connStr := os.Getenv("DATABASE_URL")
-	log.Println(connStr)
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		return nil, err

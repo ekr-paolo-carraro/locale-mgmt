@@ -26,15 +26,15 @@ func NewAutenticator() (*Autenticator, error) {
 
 	ctx := context.Background()
 
-	provider, err := oidc.NewProvider(ctx, os.Getenv("OAUTH_PROVIDER"))
+	provider, err := oidc.NewProvider(ctx, os.Getenv("AUTH0_DOMAIN"))
 	if err != nil {
 		return nil, err
 	}
 
 	conf := oauth2.Config{
-		ClientID:     os.Getenv("CLIENT_ID"),
-		ClientSecret: os.Getenv("CLIENT_SECRET"),
-		RedirectURL:  os.Getenv("REDIRECT_URL"),
+		ClientID:     os.Getenv("AUTH0_CLIENT_ID"),
+		ClientSecret: os.Getenv("AUTH0_CLIENT_SECRET"),
+		RedirectURL:  os.Getenv("AUTH0_CALLBACK_URL"),
 		Scopes:       []string{oidc.ScopeOpenID, "profile"},
 		Endpoint:     provider.Endpoint(),
 	}
@@ -79,7 +79,7 @@ func CallbackHandler(c *gin.Context) {
 	}
 
 	oidcConfig := &oidc.Config{
-		ClientID: os.Getenv("CLIENT_ID"),
+		ClientID: os.Getenv("AUTH0_CLIENT_ID"),
 	}
 
 	idToken, err := authenticator.Provider.Verifier(oidcConfig).Verify(context.TODO(), rawIdToken)

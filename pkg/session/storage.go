@@ -15,7 +15,10 @@ var (
 //InitSessionStorage startup storage for authentication
 func InitSessionStorage() error {
 
-	gotenv.Load()
+	err := gotenv.Load()
+	if err != nil {
+		return err
+	}
 
 	Store = sessions.NewFilesystemStore("", []byte(os.Getenv("KEY_FOR_SESSION_STORE")))
 	gob.Register(map[string]interface{}{})

@@ -47,13 +47,12 @@ func LoginHandler(c *gin.Context) {
 	}
 
 	redirectLocation := authenticator.Config.AuthCodeURL(state)
-	log.Println(redirectLocation)
 	c.Redirect(http.StatusTemporaryRedirect, redirectLocation)
 }
 
 //LogoutHandler manage logout call
 func LogoutHandler(c *gin.Context) {
-	domain := os.Getenv("OAUTH_PROVIDER")
+	domain := os.Getenv("AUTH0_DOMAIN")
 	logoutUrl, err := url.Parse(domain)
 
 	if err != nil {
@@ -84,7 +83,7 @@ func LogoutHandler(c *gin.Context) {
 	}
 
 	params.Add("returnTo", returnTo.String())
-	params.Add("client_id", os.Getenv("CLIENT_ID"))
+	params.Add("client_id", os.Getenv("AUTH0_CLIENT_ID"))
 	logoutUrl.RawQuery = params.Encode()
 
 	c.Redirect(http.StatusTemporaryRedirect, logoutUrl.String())
