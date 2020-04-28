@@ -2,10 +2,10 @@ package session
 
 import (
 	"encoding/gob"
-	"log"
 	"os"
 
 	"github.com/gorilla/sessions"
+	log "github.com/sirupsen/logrus"
 	"github.com/subosito/gotenv"
 )
 
@@ -21,7 +21,7 @@ func InitSessionStorage() error {
 		return err
 	}
 
-	log.Println("test--" + os.Getenv("KEY_FOR_SESSION_STORE"))
+	log.Info("test--" + os.Getenv("KEY_FOR_SESSION_STORE"))
 	Store = sessions.NewCookieStore([]byte(os.Getenv("KEY_FOR_SESSION_STORE")))
 	gob.Register(map[string]interface{}{})
 	return nil

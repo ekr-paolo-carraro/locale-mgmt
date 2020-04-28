@@ -8,6 +8,7 @@ require (
 	github.com/gorilla/sessions v1.2.0
 	github.com/lib/pq v1.3.0
 	github.com/pquerna/cachecontrol v0.0.0-20180517163645-1555304b9b35 // indirect
+	github.com/sirupsen/logrus v1.5.0
 	github.com/subosito/gotenv v1.2.0
 	golang.org/x/crypto v0.0.0-20200406173513-056763e48d71 // indirect
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
