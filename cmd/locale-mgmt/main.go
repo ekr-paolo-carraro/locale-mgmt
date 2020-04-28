@@ -15,6 +15,6 @@ func main() {
 		return
 	}
 
-	log.Println(handling.NewHandler(nil))
+	log.Println(handling.NewHandler())
 
 }

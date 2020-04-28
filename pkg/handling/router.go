@@ -14,7 +14,7 @@ type genericMessage struct {
 }
 
 //NewHandler return a new router handler
-func NewHandler(delegate interface{}) error {
+func NewHandler() error {
 
 	rh := gin.Default()
 
