@@ -12,6 +12,7 @@ func main() {
 	err := session.InitSessionStorage()
 	if err != nil {
 		log.Println(err.Error())
+		return
 	}
 
 	log.Println(handling.NewHandler(nil))
