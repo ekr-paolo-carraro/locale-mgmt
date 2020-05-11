@@ -21,7 +21,7 @@ type Autenticator struct {
 	Context  context.Context
 }
 
-//NewAutenticator return an object with provider and other info to get auth token
+//NewAutenticator return an object with provider and config to get auth token
 func NewAutenticator() (*Autenticator, error) {
 
 	ctx := context.Background()
@@ -49,12 +49,14 @@ func NewAutenticator() (*Autenticator, error) {
 //CallbackHandler manage callback call by Auth0 provider
 func CallbackHandler(c *gin.Context) {
 
+	//retrive session to get state for compare
 	ss, err := session.Store.Get(c.Request, "auth-session")
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 
+	//compare state returned by provider with session stored one
 	if c.Request.URL.Query().Get("state") != ss.Values["state"] {
 		c.AbortWithError(http.StatusInternalServerError, errors.New("Invalid state parameter"))
 		return
@@ -66,6 +68,7 @@ func CallbackHandler(c *gin.Context) {
 		return
 	}
 
+	//request access token with code returned by provider
 	token, err := authenticator.Config.Exchange(context.TODO(), c.Request.URL.Query().Get("code"))
 	if err != nil {
 		c.AbortWithError(http.StatusUnauthorized, err)
@@ -82,6 +85,7 @@ func CallbackHandler(c *gin.Context) {
 		ClientID: os.Getenv("AUTH0_CLIENT_ID"),
 	}
 
+	//parse and verify jwt token
 	idToken, err := authenticator.Provider.Verifier(oidcConfig).Verify(context.TODO(), rawIdToken)
 
 	if err != nil {
@@ -89,6 +93,7 @@ func CallbackHandler(c *gin.Context) {
 		return
 	}
 
+	//retrive claims from jwt token
 	var profile map[string]interface{}
 	if err := idToken.Claims(&profile); err != nil {
 		c.AbortWithError(http.StatusInternalServerError, errors.New("Failed to marshall profile: "+err.Error()))
@@ -110,13 +115,14 @@ func CallbackHandler(c *gin.Context) {
 //AuthRequired is the middleware to test if user is authenticated
 func AuthRequired() gin.HandlerFunc {
 	return func(c *gin.Context) {
+
 		ss, err := session.Store.Get(c.Request, "auth-session")
 		if err != nil {
 			c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
 
-		if _, ok := ss.Values["profile"]; !ok {
+		if _, ok := ss.Values["access_token"]; !ok {
 			c.Redirect(http.StatusTemporaryRedirect, "/welcome")
 			return
 		}
