@@ -4,7 +4,10 @@ import (
 	"database/sql"
 	"errors"
 	"io/ioutil"
+	"log"
 	"os"
+	"strconv"
+	"strings"
 
 	_ "github.com/lib/pq"
 )
@@ -12,9 +15,10 @@ import (
 //LocalePersistencer interface for persistence service
 type LocalePersistencer interface {
 	PostLocaleItem(item LocaleItem) (*LocaleItem, error)
-	//PostLocaleItems(items []LocaleItem) (int, error)
-	GetLocaleItem(key, bundle, lang string) (*LocaleItem, error)
-	//GetLocaleItems(bundle, lang string) ([]LocaleItem, error)
+	PostLocaleItems(items []LocaleItem) (int, error)
+	GetLocaleItems(key, bundle, lang string) ([]LocaleItem, error)
+	GetLangs() ([]string, error)
+	GetBundles() ([]string, error)
 }
 
 //LocalePersistenceService manages persistence with db
@@ -60,8 +64,7 @@ func (lps LocalePersistenceService) PostLocaleItem(item LocaleItem) (*LocaleItem
 	}
 
 	insertResult := insertStmt.QueryRow(item.Key, item.Bundle, item.Lang, item.Content)
-
-	err = insertResult.Scan(&item.ID)
+	insertResult.Scan(&item.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -69,10 +72,66 @@ func (lps LocalePersistenceService) PostLocaleItem(item LocaleItem) (*LocaleItem
 	return &item, nil
 }
 
+//PostLocaleItems implements LocalePersistencer interface with postgresql implementation
+func (lps LocalePersistenceService) PostLocaleItems(items []LocaleItem) (int, error) {
+
+	insertStmtStr, err := ioutil.ReadFile("pkg/storaging/sql/upsert.sql")
+	if err != nil {
+		return 0, err
+	}
+
+	tx, err := lps.DBDelegate.Begin()
+	if err != nil {
+		return 0, err
+	}
+	defer tx.Rollback()
+
+	insertStmt, err := tx.Prepare(string(insertStmtStr))
+	if err != nil {
+		return 0, err
+	}
+
+	defer insertStmt.Close()
+	for _, item := range items {
+		if _, err = insertStmt.Exec(item.Key, item.Bundle, item.Lang, item.Content); err != nil {
+			return 0, err
+		}
+	}
+
+	if err = tx.Commit(); err != nil {
+		return 0, err
+	}
+
+	return len(items), nil
+}
+
 //GetLocaleItem return one localeitem for key, bundle, lang
-func (lps LocalePersistenceService) GetLocaleItem(key, bundle, lang string) (*LocaleItem, error) {
-	selectStmt := "SELECT id, bundle, lang, key, content FROM localeitems WHERE localeitems.key = $1 AND localeitems.bundle = $2 AND localeitems.lang = $3;"
-	sqlResult, err := lps.DBDelegate.Query(selectStmt)
+func (lps LocalePersistenceService) GetLocaleItems(key, bundle, lang string) ([]LocaleItem, error) {
+	selectStmt := "SELECT id, bundle, lang, key, content FROM localeitems WHERE"
+
+	placeHolderCounter := 0
+	params := []interface{}{}
+	if key != "" {
+		placeHolderCounter++
+		selectStmt += " localeitems.key = $" + strconv.Itoa(placeHolderCounter) + " AND"
+		params = append(params, key)
+	}
+	if bundle != "" {
+		placeHolderCounter++
+		selectStmt += " localeitems.bundle = $" + strconv.Itoa(placeHolderCounter) + " AND"
+		params = append(params, bundle)
+	}
+	if lang != "" {
+		placeHolderCounter++
+		selectStmt += " localeitems.lang = $" + strconv.Itoa(placeHolderCounter) + " AND"
+		params = append(params, lang)
+	}
+
+	selectStmt = strings.TrimSuffix(selectStmt, " AND")
+
+	log.Println(selectStmt)
+
+	sqlResult, err := lps.DBDelegate.Query(selectStmt, params...)
 	if err != nil {
 		return nil, err
 	}
@@ -83,9 +142,7 @@ func (lps LocalePersistenceService) GetLocaleItem(key, bundle, lang string) (*Lo
 		return nil, err
 	}
 
-	li := items[0]
-
-	return &li, nil
+	return items, nil
 }
 
 func parseResult(res *sql.Rows) ([]LocaleItem, error) {
@@ -114,6 +171,46 @@ func parseResult(res *sql.Rows) ([]LocaleItem, error) {
 
 	if len(result) == 0 {
 		return nil, errors.New("Error on query result: zero items")
+	}
+
+	return result, nil
+}
+
+func (lps LocalePersistenceService) GetLangs() ([]string, error) {
+	result := []string{}
+	rows, err := lps.DBDelegate.Query("SELECT DISTINCT(lang) FROM localeitems")
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var lang string
+		err = rows.Scan(&lang)
+		if err != nil {
+			return nil, err
+		}
+
+		result = append(result, lang)
+	}
+
+	return result, nil
+}
+
+func (lps LocalePersistenceService) GetBundles() ([]string, error) {
+	result := []string{}
+	rows, err := lps.DBDelegate.Query("SELECT DISTINCT(bundle) FROM localeitems")
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var lang string
+		err = rows.Scan(&lang)
+		if err != nil {
+			return nil, err
+		}
+
+		result = append(result, lang)
 	}
 
 	return result, nil
