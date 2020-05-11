@@ -13,9 +13,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-//LoginHandler manage login call
+//LoginHandler manage login call to auth provider
 func LoginHandler(c *gin.Context) {
 
+	//random to generate state for request and then compare the code for getting auth-token
 	b := make([]byte, 32)
 	_, err := rand.Read(b)
 
@@ -24,28 +25,32 @@ func LoginHandler(c *gin.Context) {
 		return
 	}
 
+	//generate random state
 	state := base64.StdEncoding.EncodeToString(b)
 
+	//int session to store sate
 	ss, err := session.Store.Get(c.Request, "auth-session")
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 
+	//store state and save session
 	ss.Values["state"] = state
 	err = ss.Save(c.Request, c.Writer)
-
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 
+	//init connectoin with authenticator
 	authenticator, err := NewAutenticator()
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 
+	//call auth provider with random state
 	redirectLocation := authenticator.Config.AuthCodeURL(state)
 	c.Redirect(http.StatusTemporaryRedirect, redirectLocation)
 }
@@ -100,6 +105,18 @@ func InfoHandler(c *gin.Context) {
 		return
 	}
 
-	msg["user"] = ss.Values["profile"]
+	candidate := ss.Values["profile"]
+	if candidate != nil {
+		msg["user"] = candidate
+	}
+	candidate = ss.Values["access_token"]
+	if candidate != nil {
+		msg["access_token"] = candidate
+	}
+	candidate = ss.Values["id_token"]
+	if candidate != nil {
+		msg["id_token"] = candidate
+	}
+
 	c.JSON(http.StatusOK, msg)
 }
