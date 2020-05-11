@@ -2,7 +2,6 @@ package handling
 
 import (
 	"net/http"
-	"os"
 
 	"github.com/ekr-paolo-carraro/locale-mgmt/pkg/authorizating"
 	"github.com/ekr-paolo-carraro/locale-mgmt/pkg/storaging"
@@ -14,7 +13,7 @@ type genericMessage struct {
 }
 
 //NewHandler return a new router handler
-func NewHandler() error {
+func NewHandler() (*gin.Engine, error) {
 
 	rh := gin.Default()
 
@@ -28,16 +27,27 @@ func NewHandler() error {
 	rh.GET("/info", authorizating.InfoHandler)
 	lph, err := storaging.NewPersistenceHandler()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	apiGroup := rh.Group("/api/v1")
 	{
 		apiGroup.GET("/restricted", authorizating.AuthRequired(), authorizating.RestrictedHandler)
+
+		apiGroup.GET("/langs", authorizating.AuthRequired(), lph.GetAllLangs)
+		apiGroup.GET("/bundles", authorizating.AuthRequired(), lph.GetAllBundles)
+
 		apiGroup.POST("/locale-item", authorizating.AuthRequired(), lph.PostLocaleItemHandler)
+		apiGroup.POST("/locale-items", authorizating.AuthRequired(), lph.PostLocaleItemsHandler)
+
+		apiGroup.GET("/locale-items/:bundle", authorizating.AuthRequired(), lph.GetLocaleItemByBundleKeyLang)
+		apiGroup.GET("/locale-items/:bundle/lang/:langId", authorizating.AuthRequired(), lph.GetLocaleItemByBundleKeyLang)
+		apiGroup.GET("/locale-items/:bundle/lang/:langId/key/:keyId", authorizating.AuthRequired(), lph.GetLocaleItemByBundleKeyLang)
+		apiGroup.GET("/locale-items/:bundle/key/:keyId", authorizating.AuthRequired(), lph.GetLocaleItemByBundleKeyLang)
+
 	}
 
-	return rh.Run(":" + os.Getenv("PORT"))
+	return rh, nil
 }
 
 func welcomeHandler(c *gin.Context) {
