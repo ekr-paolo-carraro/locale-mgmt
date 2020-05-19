@@ -37,13 +37,18 @@ func NewHandler() (*gin.Engine, error) {
 		apiGroup.GET("/langs", authorizating.AuthRequired(), lph.GetAllLangs)
 		apiGroup.GET("/bundles", authorizating.AuthRequired(), lph.GetAllBundles)
 
-		apiGroup.POST("/locale-item", authorizating.AuthRequired(), lph.PostLocaleItemHandler)
-		apiGroup.POST("/locale-items", authorizating.AuthRequired(), lph.PostLocaleItemsHandler)
+		apiGroup.POST("/locale-item", authorizating.AuthRequired(), lph.PostLocaleItem)
+		apiGroup.POST("/locale-items", authorizating.AuthRequired(), lph.PostLocaleItems)
 
 		apiGroup.GET("/locale-items/:bundle", authorizating.AuthRequired(), lph.GetLocaleItemByBundleKeyLang)
 		apiGroup.GET("/locale-items/:bundle/lang/:langId", authorizating.AuthRequired(), lph.GetLocaleItemByBundleKeyLang)
 		apiGroup.GET("/locale-items/:bundle/lang/:langId/key/:keyId", authorizating.AuthRequired(), lph.GetLocaleItemByBundleKeyLang)
 		apiGroup.GET("/locale-items/:bundle/key/:keyId", authorizating.AuthRequired(), lph.GetLocaleItemByBundleKeyLang)
+
+		apiGroup.DELETE("/locale-items/:bundle", authorizating.AuthRequired(), lph.DeleteLocaleItemByBundleKeyLang)
+		apiGroup.DELETE("/locale-items/:bundle/lang/:langId", authorizating.AuthRequired(), lph.DeleteLocaleItemByBundleKeyLang)
+		apiGroup.DELETE("/locale-items/:bundle/lang/:langId/key/:keyId", authorizating.AuthRequired(), lph.DeleteLocaleItemByBundleKeyLang)
+		apiGroup.DELETE("/locale-items/:bundle/key/:keyId", authorizating.AuthRequired(), lph.DeleteLocaleItemByBundleKeyLang)
 
 	}
 

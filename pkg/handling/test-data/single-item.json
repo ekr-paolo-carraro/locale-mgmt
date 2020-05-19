@@ -1,0 +1,6 @@
+{
+    "bundle": "message",
+    "key": "@ALERT_ERROR@",
+    "lang": "it-IT",
+    "content": "This is an error"
+}

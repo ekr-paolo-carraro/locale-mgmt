@@ -1,0 +1,12 @@
+[
+    {
+        "bundle": "label",
+        "lang": "it-IT",
+        "content": "Questo è un secondo test"
+    },
+    {
+        "bundle": "label",
+        "key": "@HELLO_TEST@",
+        "content": "This is a test"
+    }
+]

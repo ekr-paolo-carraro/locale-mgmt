@@ -43,6 +43,19 @@ components:
           description: content text 
           type: string
           example: This setting are not correct. Contact admin for info.
+    massive-result:
+      type: object
+      properties:
+        num-sucessfull:
+          description: num of items that have been processed successfully
+          type: integer
+          format: int32
+          example: 34
+        num-failed:
+          description: num of items that fail on being processed
+          type: integer
+          format: int32
+          example: 34
   securitySchemes:
     OAuth2:
       type: oauth2
@@ -210,17 +223,13 @@ paths:
             application/json:
               schema: 
                 type: object
-                properties:
-                  added-items-num: 
-                    type: integer
-                    format: int32
-
+                $ref: '#/components/schemas/massive-result'
 
 
 
   /api/v1/locale-items/{bundle}:
     get:
-      summary: Return all locale items for specific bundle
+      summary: Return all locale items for passed bundle
       operationId: getLocaleItemByBundle
       tags:
         - locale-item
@@ -242,6 +251,30 @@ paths:
                 type: array
                 items: 
                   $ref: '#/components/schemas/locale-item'
+    delete:
+      summary: Delete all locale items for passed bundle
+      operationId: deleteLocaleItemsByBundle
+      tags:
+        - locale-item
+      security:
+        - OAuth2: [read]
+      parameters:
+        - in: path
+          name: bundle
+          description: the name of bundle to delete
+          required: true
+          schema: 
+            type: string
+      responses:
+        '200':
+          description: Confirm that locale items have been deleted
+          content:
+            application/json:
+              schema: 
+                type: object
+                $ref: '#/components/schemas/massive-result'
+
+
 
 
   /api/v1/locale-items/{bundle}/lang/{langId}:
@@ -274,6 +307,34 @@ paths:
                 type: array
                 items: 
                   $ref: '#/components/schemas/locale-item'
+    delete:
+      summary: Delete all locale items for passed bundle and lang
+      operationId: deleteLocaleItemsByBundleLang
+      tags:
+        - locale-item
+      security:
+        - OAuth2: [read]
+      parameters:
+        - in: path
+          name: bundle
+          description: the name of bundle to delete
+          required: true
+          schema: 
+            type: string
+        - in: path
+          name: langId
+          description: the id of lang
+          required: true
+          schema: 
+            type: string
+      responses:
+        '200':
+          description: Confirm that locale items have been deleted
+          content:
+            application/json:
+              schema: 
+                type: object
+                $ref: '#/components/schemas/massive-result'
 
 
   /api/v1/locale-items/{bundle}/key/{keyId}:
@@ -299,19 +360,47 @@ paths:
             type: string
       responses:
         '200':
-          description: A locale items for given bundle and eky
+          description: A locale items for given bundle and key
           content:
             application/json:
               schema:
                 type: array
                 items: 
                   $ref: '#/components/schemas/locale-item'
+    delete:
+      summary: Delete all locale items for passed bundle and lang and key
+      operationId: deleteLocaleItemsByBundleLangKey
+      tags:
+        - locale-item
+      security:
+        - OAuth2: [read]
+      parameters:
+        - in: path
+          name: bundle
+          description: the name of bundle to delete
+          required: true
+          schema: 
+            type: string
+        - in: path
+          name: keyId
+          description: the key of single locale-item
+          required: true
+          schema: 
+            type: string
+      responses:
+        '200':
+          description: Confirm that locale items have been deleted
+          content:
+            application/json:
+              schema: 
+                type: object
+                $ref: '#/components/schemas/massive-result'
 
 
   /api/v1/locale-items/{bundle}/lang/{langId}/key/{keyId}:
     get:
       summary: Return one locale-item for given bundle, key and lang
-      operationId: getLocaleItemByBundleKeyLang
+      operationId: getLocaleItemByBundleKey
       tags:
         - locale-item
       security:
@@ -344,3 +433,37 @@ paths:
                 type: array
                 items: 
                   $ref: '#/components/schemas/locale-item'
+    delete:
+      summary: Delete all locale items for passed bundle and lang and key
+      operationId: deleteLocaleItemsByBundleLangKey
+      tags:
+        - locale-item
+      security:
+        - OAuth2: [read]
+      parameters:
+        - in: path
+          name: bundle
+          description: the name of bundle to get
+          required: true
+          schema: 
+            type: string
+        - in: path
+          name: langId
+          description: the lang of single locale-item
+          required: true
+          schema: 
+            type: string
+        - in: path
+          name: keyId
+          description: the key of single locale-item
+          required: true
+          schema: 
+            type: string
+      responses:
+        '200':
+          description: Confirm that locale items have been deleted
+          content:
+            application/json:
+              schema: 
+                type: object
+                $ref: '#/components/schemas/massive-result'

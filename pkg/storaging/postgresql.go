@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"errors"
 	"io/ioutil"
-	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -15,8 +14,9 @@ import (
 //LocalePersistencer interface for persistence service
 type LocalePersistencer interface {
 	PostLocaleItem(item LocaleItem) (*LocaleItem, error)
-	PostLocaleItems(items []LocaleItem) (int, error)
+	PostLocaleItems(items []LocaleItem) (int64, error)
 	GetLocaleItems(key, bundle, lang string) ([]LocaleItem, error)
+	DeleteLocaleItems(key, bundle, lang string) (int64, error)
 	GetLangs() ([]string, error)
 	GetBundles() ([]string, error)
 }
@@ -39,7 +39,7 @@ func NewPostgresPersistenceService() (*LocalePersistenceService, error) {
 		return nil, err
 	}
 
-	initStmt, err := ioutil.ReadFile("pkg/storaging/sql/init.sql")
+	initStmt, err := ioutil.ReadFile(os.Getenv("SQL_PATH") + "sql/init.sql")
 	_, err = db.Exec(string(initStmt))
 	if err != nil {
 		return nil, err
@@ -53,7 +53,7 @@ func NewPostgresPersistenceService() (*LocalePersistenceService, error) {
 //PostLocaleItem implements LocalePersistencer interface with postgresql implementation
 func (lps LocalePersistenceService) PostLocaleItem(item LocaleItem) (*LocaleItem, error) {
 
-	insertStmtStr, err := ioutil.ReadFile("pkg/storaging/sql/upsert.sql")
+	insertStmtStr, err := ioutil.ReadFile(os.Getenv("SQL_PATH") + "sql/upsert.sql")
 	if err != nil {
 		return nil, err
 	}
@@ -73,9 +73,9 @@ func (lps LocalePersistenceService) PostLocaleItem(item LocaleItem) (*LocaleItem
 }
 
 //PostLocaleItems implements LocalePersistencer interface with postgresql implementation
-func (lps LocalePersistenceService) PostLocaleItems(items []LocaleItem) (int, error) {
+func (lps LocalePersistenceService) PostLocaleItems(items []LocaleItem) (int64, error) {
 
-	insertStmtStr, err := ioutil.ReadFile("pkg/storaging/sql/upsert.sql")
+	insertStmtStr, err := ioutil.ReadFile(os.Getenv("SQL_PATH") + "sql/upsert.sql")
 	if err != nil {
 		return 0, err
 	}
@@ -90,11 +90,15 @@ func (lps LocalePersistenceService) PostLocaleItems(items []LocaleItem) (int, er
 	if err != nil {
 		return 0, err
 	}
-
 	defer insertStmt.Close()
+
+	var itemInserted int64 = 0
 	for _, item := range items {
-		if _, err = insertStmt.Exec(item.Key, item.Bundle, item.Lang, item.Content); err != nil {
-			return 0, err
+		if item.isValid() {
+			if _, err = insertStmt.Exec(item.Key, item.Bundle, item.Lang, item.Content); err != nil {
+				return 0, err
+			}
+			itemInserted++
 		}
 	}
 
@@ -102,35 +106,15 @@ func (lps LocalePersistenceService) PostLocaleItems(items []LocaleItem) (int, er
 		return 0, err
 	}
 
-	return len(items), nil
+	return itemInserted, nil
 }
 
 //GetLocaleItem return one localeitem for key, bundle, lang
 func (lps LocalePersistenceService) GetLocaleItems(key, bundle, lang string) ([]LocaleItem, error) {
 	selectStmt := "SELECT id, bundle, lang, key, content FROM localeitems WHERE"
 
-	placeHolderCounter := 0
-	params := []interface{}{}
-	if key != "" {
-		placeHolderCounter++
-		selectStmt += " localeitems.key = $" + strconv.Itoa(placeHolderCounter) + " AND"
-		params = append(params, key)
-	}
-	if bundle != "" {
-		placeHolderCounter++
-		selectStmt += " localeitems.bundle = $" + strconv.Itoa(placeHolderCounter) + " AND"
-		params = append(params, bundle)
-	}
-	if lang != "" {
-		placeHolderCounter++
-		selectStmt += " localeitems.lang = $" + strconv.Itoa(placeHolderCounter) + " AND"
-		params = append(params, lang)
-	}
-
-	selectStmt = strings.TrimSuffix(selectStmt, " AND")
-
-	log.Println(selectStmt)
-
+	whereClause, params := evaluateLocaleItemParams(key, bundle, lang)
+	selectStmt += whereClause
 	sqlResult, err := lps.DBDelegate.Query(selectStmt, params...)
 	if err != nil {
 		return nil, err
@@ -143,6 +127,50 @@ func (lps LocalePersistenceService) GetLocaleItems(key, bundle, lang string) ([]
 	}
 
 	return items, nil
+}
+
+//DeleteLocaleItem return one localeitem for key, bundle, lang
+func (lps LocalePersistenceService) DeleteLocaleItems(key, bundle, lang string) (int64, error) {
+	deleteStmt := "DELETE FROM localeitems WHERE"
+
+	whereClause, params := evaluateLocaleItemParams(key, bundle, lang)
+	deleteStmt += whereClause
+	sqlResult, err := lps.DBDelegate.Exec(deleteStmt, params...)
+	if err != nil {
+		return 0, err
+	}
+
+	numItemAffected, err := sqlResult.RowsAffected()
+	if err != nil {
+		return 0, err
+	}
+
+	return numItemAffected, nil
+}
+
+func evaluateLocaleItemParams(key, bundle, lang string) (string, []interface{}) {
+	placeHolderCounter := 0
+	statement := ""
+	params := []interface{}{}
+	if key != "" {
+		placeHolderCounter++
+		statement += " localeitems.key = $" + strconv.Itoa(placeHolderCounter) + " AND"
+		params = append(params, key)
+	}
+	if bundle != "" {
+		placeHolderCounter++
+		statement += " localeitems.bundle = $" + strconv.Itoa(placeHolderCounter) + " AND"
+		params = append(params, bundle)
+	}
+	if lang != "" {
+		placeHolderCounter++
+		statement += " localeitems.lang = $" + strconv.Itoa(placeHolderCounter) + " AND"
+		params = append(params, lang)
+	}
+
+	statement = strings.TrimSuffix(statement, " AND")
+
+	return statement, params
 }
 
 func parseResult(res *sql.Rows) ([]LocaleItem, error) {

@@ -1,1 +1,1 @@
-web: bin/locale-mgmt
+web: bin\locale-mgmt.exe
