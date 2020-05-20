@@ -197,10 +197,6 @@ func parseResult(res *sql.Rows) ([]LocaleItem, error) {
 		result = append(result, li)
 	}
 
-	if len(result) == 0 {
-		return nil, errors.New("Error on query result: zero items")
-	}
-
 	return result, nil
 }
 
