@@ -34,3 +34,22 @@ type MassiveResult struct {
 	NumSuccessfull int64 `json:"num_successfull"`
 	NumFailed      int64 `json:"num_failed"`
 }
+
+type LocaleItemQueryParams struct {
+	Lang    string `form:"lang"`
+	Content string `form:"content"`
+	Key     string `form:"key"`
+	Offset  int    `form:"offset"`
+	Limit   int    `form:"limit"`
+}
+
+//LocalePersistencer interface for persistence service
+type LocalePersistencer interface {
+	PostLocaleItem(item LocaleItem) (*LocaleItem, error)
+	PostLocaleItems(items []LocaleItem) (int64, error)
+	GetLocaleItem(id string) (*LocaleItem, error)
+	GetLocaleItems(key, bundle, lang, content string, limit, offset int) ([]LocaleItem, error)
+	DeleteLocaleItems(key, bundle, lang string) (int64, error)
+	GetLangs(bundle string) ([]string, error)
+	GetBundles() ([]string, error)
+}

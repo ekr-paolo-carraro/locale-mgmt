@@ -2,6 +2,7 @@ package storaging
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -76,28 +77,61 @@ func (lph LocalePersistenceHandler) PostLocaleItems(c *gin.Context) {
 //GetLocaleItemHandler handle retrive for locale items
 func (lph LocalePersistenceHandler) GetLocaleItemByBundleKeyLang(c *gin.Context) {
 	var localeItems []LocaleItem
-	pKey := c.Param("keyId")
-	pLang := c.Param("langId")
-	pBundle := c.Param("bundle")
+	var localeItemQueryParams LocaleItemQueryParams
+	var bundleId string = c.Param("bundle")
 
-	localeItems, err := lph.PersistenceDelegate.GetLocaleItems(pKey, pBundle, pLang)
+	err := c.ShouldBindQuery(&localeItemQueryParams)
 	if err != nil {
-		msg := ErrorMessage{fmt.Sprintf("Error on retrive items for %s, %s, %s : %v", pKey, pBundle, pLang, err)}
+		msg := ErrorMessage{"Error on parsing query params"}
+		c.JSON(http.StatusInternalServerError, msg)
+		return
+	}
+
+	localeItems, err = lph.PersistenceDelegate.GetLocaleItems(localeItemQueryParams.Key, bundleId, localeItemQueryParams.Lang, localeItemQueryParams.Content, localeItemQueryParams.Limit, localeItemQueryParams.Offset)
+	if err != nil {
+		msg := ErrorMessage{fmt.Sprintf("Error on retrive items for %s, %s, %s : %v", localeItemQueryParams.Key, bundleId, localeItemQueryParams.Lang, err)}
 		c.JSON(http.StatusInternalServerError, msg)
 		return
 	}
 	c.JSON(http.StatusOK, localeItems)
 }
 
+//GetLocaleItemHandler handle retrive locale item by id
+func (lph LocalePersistenceHandler) GetLocaleItemById(c *gin.Context) {
+	pId := c.Param("id")
+	var msg ErrorMessage
+
+	localeItem, err := lph.PersistenceDelegate.GetLocaleItem(pId)
+	if err != nil {
+		msg = ErrorMessage{fmt.Sprintf("Error on retrive items for %s: %v", pId, err)}
+		c.JSON(http.StatusInternalServerError, msg)
+		return
+	}
+
+	if err == nil && localeItem == nil {
+		msg = ErrorMessage{fmt.Sprintf("No item found for id %s", pId)}
+		c.JSON(http.StatusNotFound, msg)
+		return
+	}
+
+	c.JSON(http.StatusOK, localeItem)
+}
+
 //DeleteLocaleItemHandler handle retrive for delete locale items
 func (lph LocalePersistenceHandler) DeleteLocaleItemByBundleKeyLang(c *gin.Context) {
-	pKey := c.Param("keyId")
-	pLang := c.Param("langId")
-	pBundle := c.Param("bundle")
+	var localeItemQueryParams LocaleItemQueryParams
+	var bundleId string = c.Param("bundle")
 
-	numDeleteItems, err := lph.PersistenceDelegate.DeleteLocaleItems(pKey, pBundle, pLang)
+	err := c.ShouldBindQuery(&localeItemQueryParams)
 	if err != nil {
-		msg := ErrorMessage{fmt.Sprintf("Error on delete items for %s, %s, %s : %v", pKey, pBundle, pLang, err)}
+		msg := ErrorMessage{"Error on parsing query params"}
+		c.JSON(http.StatusInternalServerError, msg)
+		return
+	}
+
+	numDeleteItems, err := lph.PersistenceDelegate.DeleteLocaleItems(localeItemQueryParams.Key, bundleId, localeItemQueryParams.Lang)
+	if err != nil {
+		msg := ErrorMessage{fmt.Sprintf("Error on delete items for %s, %s, %s : %v", localeItemQueryParams.Key, bundleId, localeItemQueryParams.Lang, err)}
 		c.JSON(http.StatusInternalServerError, msg)
 		return
 	}
@@ -111,7 +145,9 @@ func (lph LocalePersistenceHandler) DeleteLocaleItemByBundleKeyLang(c *gin.Conte
 
 //GetAllLangs return all lang
 func (lph LocalePersistenceHandler) GetAllLangs(c *gin.Context) {
-	result, err := lph.PersistenceDelegate.GetLangs()
+	candidateBundle := c.Param("bundleId")
+	log.Printf("Bundle of filter lang %v\n", candidateBundle)
+	result, err := lph.PersistenceDelegate.GetLangs(candidateBundle)
 	if err != nil {
 		msg := ErrorMessage{fmt.Sprintf("Error on retrive langs: %v", err)}
 		c.JSON(http.StatusInternalServerError, msg)
