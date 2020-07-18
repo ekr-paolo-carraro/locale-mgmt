@@ -109,7 +109,7 @@ func CallbackHandler(c *gin.Context) {
 		return
 	}
 
-	c.Redirect(http.StatusSeeOther, "/info")
+	c.Redirect(http.StatusSeeOther, os.Getenv("WEB_APP_DOMAIN")+"/welcome")
 }
 
 //AuthRequired is the middleware to test if user is authenticated
@@ -128,7 +128,7 @@ func AuthRequired() gin.HandlerFunc {
 		}
 
 		if _, ok := ss.Values["access_token"]; !ok {
-			c.Redirect(http.StatusTemporaryRedirect, "/welcome")
+			c.Redirect(http.StatusTemporaryRedirect, os.Getenv("WEB_APP_DOMAIN")+"/welcome")
 			return
 		}
 

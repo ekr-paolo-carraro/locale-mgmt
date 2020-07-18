@@ -3,7 +3,6 @@ package authorizating
 import (
 	"crypto/rand"
 	"encoding/base64"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -80,8 +79,14 @@ func LogoutHandler(c *gin.Context) {
 		urlToReturn = strings.Replace(urlToReturn, "http://", "", 0)
 		urlToReturn = strings.Replace(urlToReturn, "https://", "", 0)
 	}
-	log.Println(protocol + "://" + urlToReturn + "/welcome")
-	returnTo, err := url.Parse(protocol + "://" + urlToReturn + "/welcome")
+
+	urlToReturn = protocol + "://" + urlToReturn
+
+	if altUrlToReturn := os.Getenv("WEB_APP_DOMAIN"); altUrlToReturn != "" {
+		urlToReturn = altUrlToReturn
+	}
+
+	returnTo, err := url.Parse(urlToReturn + "/welcome")
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
