@@ -1,8 +1,6 @@
 package handling
 
 import (
-	"net/http"
-
 	"github.com/ekr-paolo-carraro/locale-mgmt/pkg/authorizating"
 	"github.com/ekr-paolo-carraro/locale-mgmt/pkg/storaging"
 	"github.com/gin-gonic/gin"
@@ -17,14 +15,12 @@ func NewHandler() (*gin.Engine, error) {
 
 	rh := gin.Default()
 
-	rh.GET("/", welcomeHandler)
-	rh.GET("/welcome", welcomeHandler)
-
 	rh.GET("/callback", authorizating.CallbackHandler)
 	rh.GET("/login", authorizating.LoginHandler)
 	rh.GET("/logout", authorizating.LogoutHandler)
 
 	rh.GET("/info", authorizating.InfoHandler)
+
 	lph, err := storaging.NewPersistenceHandler()
 	if err != nil {
 		return nil, err
@@ -52,10 +48,4 @@ func NewHandler() (*gin.Engine, error) {
 	}
 
 	return rh, nil
-}
-
-func welcomeHandler(c *gin.Context) {
-	msg := genericMessage{}
-	msg.Message = "Hi, welcome to locale-mgmt, don't know who you are so go to login"
-	c.JSON(http.StatusOK, msg)
 }
