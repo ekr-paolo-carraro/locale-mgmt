@@ -59,7 +59,6 @@ func TestMain(m *testing.M) {
 func TestRoutes(t *testing.T) {
 
 	apiTest := []testItem{
-		{"welcome", testWelcome},
 		{"post localeitem correct payload", testCorrectPostLocaleItem},
 		{"post localeitem wrong payload", testWrongPostLocaleItem},
 		{"post localeitem missing payload", testMissingPostLocaleItem},
