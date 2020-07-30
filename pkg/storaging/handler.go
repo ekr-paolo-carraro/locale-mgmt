@@ -80,7 +80,7 @@ func (lph LocalePersistenceHandler) GetLocaleItemByBundleKeyLang(c *gin.Context)
 	var localeItemQueryParams LocaleItemQueryParams
 	var bundleId string = c.Param("bundle")
 
-	err := c.ShouldBindQuery(&localeItemQueryParams)
+	err := c.ShouldBind(&localeItemQueryParams)
 	if err != nil {
 		msg := ErrorMessage{"Error on parsing query params"}
 		c.JSON(http.StatusInternalServerError, msg)
