@@ -36,13 +36,38 @@ components:
           type: string
           example: ALERT_FOR_BAD_SETTING
         lang:
-          description: language which text is translated
+          description: translation text language
           type: string
           example: en_US
         content:
           description: content text 
           type: string
           example: This setting are not correct. Contact admin for info.
+    locale-item-query-params:
+      type: object
+      properties:
+        lang:
+          description: translation text language
+          type: string
+          example: it-IT
+        content:
+          description: text or part of text to filter result
+          type: string
+          example: error on retrive items
+        key:
+          description: key or part of to point content
+          type: string
+          example: ERROR_ON_FETCH_44
+        offset:
+          description: index start point for paging results
+          type: integer
+          format: int32
+          example: 10
+        limit:
+          description: num of items to retrive after offset
+          type: integer
+          format: int32
+          example: 100
     massive-result:
       type: object
       properties:
@@ -68,24 +93,6 @@ components:
             write: intended for complete manage
 
 paths:
-  /welcome:
-    get:
-      summary: Return a string of welcome to test that server is responding
-      operationId: welcomeServer
-      tags:
-        - string-msg
-      responses:
-        '200':
-          description: OK server responding
-          content:
-            application/json:
-              schema:
-                type: object
-                properties: 
-                  message:
-                    type: string
-                    example: Hello, server is working
-
 
   /info:
     get:
@@ -247,8 +254,8 @@ paths:
 
 
   /api/v1/locale-items/{bundle}:
-    get:
-      summary: Return all locale-item sfor given bundle and lang
+    post:
+      summary: Return all locale-items for given bundle and lang and/or content
       operationId: getLocaleItemByBundleLang
       tags:
         - locale-item
@@ -261,39 +268,16 @@ paths:
           required: true
           schema: 
             type: string
-        - in: query
-          name: lang
-          description: the id of lang
-          required: false
-          schema: 
-            type: string
-        - in: query
-          name: key
-          description: the id of key
-          required: false
-          schema: 
-            type: string
-        - in: query
-          name: content
-          description: part or whole content
-          required: false
-          schema: 
-            type: string
-        - in: query
-          name: limit
-          description: num of items to return
-          required: false
-          schema: 
-            type: integer
-        - in: query
-          name: offset
-          description: num of item to skip  
-          required: false
-          schema: 
-            type: integer
+      requestBody:
+        description: locale item to insert in db
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/locale-item-query-params'
       responses:
         '200':
-          description: A locale items for given bundle and optionaly lang, key or content
+          description: Locale items for given bundle and optionaly lang and/or content
           content:
             application/json:
               schema:
@@ -340,7 +324,6 @@ paths:
               schema: 
                 type: object
                 $ref: '#/components/schemas/massive-result'
-
 
 
 
