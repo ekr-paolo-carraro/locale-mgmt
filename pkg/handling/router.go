@@ -38,7 +38,7 @@ func NewHandler() (*gin.Engine, error) {
 		apiGroup.POST("/locale-item", authorizating.AuthRequired(), lph.PostLocaleItem)
 		apiGroup.POST("/locale-items", authorizating.AuthRequired(), lph.PostLocaleItems)
 
-		apiGroup.GET("/locale-items/:bundle", authorizating.AuthRequired(), lph.GetLocaleItemByBundleKeyLang)
+		apiGroup.POST("/locale-items/:bundle", authorizating.AuthRequired(), lph.GetLocaleItemByBundleKeyLang)
 
 		apiGroup.DELETE("/locale-items/:bundle", authorizating.AuthRequired(), lph.DeleteLocaleItemByBundleKeyLang)
 		apiGroup.DELETE("/locale-items/:bundle/lang/:langId", authorizating.AuthRequired(), lph.DeleteLocaleItemByBundleKeyLang)
