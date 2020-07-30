@@ -26,7 +26,7 @@ type testItem struct {
 var r *gin.Engine
 
 var localeItemToCompare []storaging.LocaleItem
-var compareJson string = `[{
+var compareJSON = `[{
 	"id":"1",
 	"bundle": "message",
 	"key": "@ALERT_ERROR@",
@@ -49,7 +49,7 @@ func TestMain(m *testing.M) {
 		log.Panicln(err)
 	}
 
-	localeItemToCompare, err = buildDataToCompare([]byte(compareJson))
+	localeItemToCompare, err = buildDataToCompare([]byte(compareJSON))
 	if err != nil {
 		log.Panicln(err)
 	}
@@ -79,7 +79,7 @@ func TestRoutes(t *testing.T) {
 	}
 }
 
-var welcomeMSG string = `{"Message":"Hi, welcome to locale-mgmt, don't know who you are so go to login"}`
+var welcomeMSG = `{"Message":"Hi, welcome to locale-mgmt, don't know who you are so go to login"}`
 
 func testWelcome(t *testing.T) {
 	w := httptest.NewRecorder()
@@ -300,11 +300,11 @@ func testGetLocaleItemsByKey(t *testing.T) {
 	r.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	reId := regexp.MustCompile(`"id":"\d+",`)
-	compareJsonWithoutId := string(reId.ReplaceAll([]byte(compareJson), []byte("")))
-	bodyWithoutId := string(reId.ReplaceAll([]byte(w.Body.String()), []byte("")))
+	reID := regexp.MustCompile(`"id":"\d+",`)
+	compareJSONWithoutID := string(reID.ReplaceAll([]byte(compareJSON), []byte("")))
+	bodyWithoutID := string(reID.ReplaceAll([]byte(w.Body.String()), []byte("")))
 
-	assert.JSONEq(t, compareJsonWithoutId, bodyWithoutId)
+	assert.JSONEq(t, compareJSONWithoutID, bodyWithoutID)
 }
 
 func testDeleteLangByBundle(t *testing.T) {
