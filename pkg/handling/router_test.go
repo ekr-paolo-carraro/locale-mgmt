@@ -1,12 +1,14 @@
 package handling
 
 import (
+	"bytes"
 	"encoding/json"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -24,6 +26,13 @@ type testItem struct {
 var r *gin.Engine
 
 var localeItemToCompare []storaging.LocaleItem
+var compareJson string = `[{
+	"id":"1",
+	"bundle": "message",
+	"key": "@ALERT_ERROR@",
+	"lang": "it-IT",
+	"content": "This is an error"
+}]`
 
 func TestMain(m *testing.M) {
 
@@ -39,14 +48,6 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Panicln(err)
 	}
-
-	var compareJson string = `[{
-		"id":"1",
-		"bundle": "message",
-		"key": "@ALERT_ERROR@",
-		"lang": "it-IT",
-		"content": "This is an error"
-	}]`
 
 	localeItemToCompare, err = buildDataToCompare([]byte(compareJson))
 	if err != nil {
@@ -66,9 +67,10 @@ func TestRoutes(t *testing.T) {
 		{"post localeitems wrong payload", testWrongPostLocaleItems},
 		{"bundles", testBundles},
 		{"langs", testLangs},
-		{"get locale item by bundle", testGetLangByBundle},
-		{"get locale item by bundle lang", testGetLangByBundleLang},
-		{"get locale item by bundle key", testGetLangByBundleKey},
+		{"get all locale items by bundle", testGetLocaleItemsByBundle},
+		{"get all locale items by bundle limited by limit", testGetLocaleItemsByBundleWithLimit},
+		{"get locale item by bundle and lang", testGetLocaleItemsByLang},
+		{"get locale item by key", testGetLocaleItemsByKey},
 		{"delete locale item by bundle", testDeleteLangByBundle},
 	}
 
@@ -85,12 +87,6 @@ func testWelcome(t *testing.T) {
 	r.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.JSONEq(t, welcomeMSG, w.Body.String())
-
-	w = httptest.NewRecorder()
-	req, _ = http.NewRequest("GET", "/welcome", nil)
-	r.ServeHTTP(w, req)
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.JSONEq(t, welcomeMSG, w.Body.String())
 }
 
 func testBundles(t *testing.T) {
@@ -103,7 +99,7 @@ func testBundles(t *testing.T) {
 
 func testLangs(t *testing.T) {
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/api/v1/langs", nil)
+	req, _ := http.NewRequest("GET", "/api/v1/bundle/label/langs", nil)
 	r.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.Contains(t, w.Body.String(), "it-IT")
@@ -166,7 +162,7 @@ func testCorrectPostLocaleItems(t *testing.T) {
 	r.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusCreated, w.Code)
 	assert.JSONEq(t, `{
-		"num_successfull": 4,
+		"num_successful": 4,
 		"num_failed": 0
 	}`, w.Body.String())
 }
@@ -186,7 +182,7 @@ func testWrongPostLocaleItems(t *testing.T) {
 	r.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusCreated, w.Code)
 	assert.JSONEq(t, `{
-		"num_successfull": 0,
+		"num_successful": 0,
 		"num_failed": 2
 	}`, w.Body.String())
 }
@@ -200,46 +196,115 @@ func buildDataToCompare(rawdata []byte) ([]storaging.LocaleItem, error) {
 	return comparingLocaleIten, nil
 }
 
-func testGetLangByBundle(t *testing.T) {
+func testGetLocaleItemsByBundle(t *testing.T) {
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/api/v1/locale-items/message", nil)
+	localeItemQueryParams := storaging.LocaleItemQueryParams{
+		Content: "",
+		Key:     "",
+		Lang:    "",
+		Limit:   0,
+		Offset:  0,
+	}
+
+	reqBody, err := json.Marshal(localeItemQueryParams)
+	if err != nil {
+		t.Errorf("Error on parsing request body: %v", err)
+	}
+
+	req, _ := http.NewRequest("POST", "/api/v1/locale-items/label", bytes.NewBuffer(reqBody))
+	req.Header.Add("Content-Type", "application/json")
 	r.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 
 	gotData, err := buildDataToCompare(w.Body.Bytes())
 	if err != nil {
-		t.Fatalf("error on build json: %v\n", err)
+		t.Fatalf("error on build result json: %v\n", err)
 	}
 
-	assert.Equal(t, localeItemToCompare, gotData)
+	assert.Len(t, gotData, 4)
 }
 
-func testGetLangByBundleLang(t *testing.T) {
+func testGetLocaleItemsByBundleWithLimit(t *testing.T) {
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/api/v1/locale-items/message/lang/it-IT", nil)
+	localeItemQueryParams := storaging.LocaleItemQueryParams{
+		Content: "",
+		Key:     "",
+		Lang:    "",
+		Limit:   2,
+		Offset:  0,
+	}
+
+	reqBody, err := json.Marshal(localeItemQueryParams)
+	if err != nil {
+		t.Errorf("Error on parsing request body: %v", err)
+	}
+
+	req, _ := http.NewRequest("POST", "/api/v1/locale-items/label", bytes.NewBuffer(reqBody))
+	req.Header.Add("Content-Type", "application/json")
 	r.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 
 	gotData, err := buildDataToCompare(w.Body.Bytes())
 	if err != nil {
-		t.Fatalf("error on build json: %v\n", err)
+		t.Fatalf("error on build result json: %v\n", err)
 	}
 
-	assert.Equal(t, localeItemToCompare, gotData)
+	assert.Len(t, gotData, 2)
 }
 
-func testGetLangByBundleKey(t *testing.T) {
+func testGetLocaleItemsByLang(t *testing.T) {
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/api/v1/locale-items/message/key/@ALERT_ERROR@", nil)
+	localeItemQueryParams := storaging.LocaleItemQueryParams{
+		Content: "",
+		Key:     "",
+		Lang:    "it-IT",
+		Limit:   0,
+		Offset:  0,
+	}
+
+	reqBody, err := json.Marshal(localeItemQueryParams)
+	if err != nil {
+		t.Errorf("Error on parsing request body: %v", err)
+	}
+
+	req, _ := http.NewRequest("POST", "/api/v1/locale-items/label", bytes.NewBuffer(reqBody))
+	req.Header.Add("Content-Type", "application/json")
 	r.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 
 	gotData, err := buildDataToCompare(w.Body.Bytes())
 	if err != nil {
-		t.Fatalf("error on build json: %v\n", err)
+		t.Fatalf("error on build result json: %v\n", err)
 	}
 
-	assert.Equal(t, localeItemToCompare, gotData)
+	assert.Len(t, gotData, 2)
+}
+
+func testGetLocaleItemsByKey(t *testing.T) {
+	w := httptest.NewRecorder()
+	localeItemQueryParams := storaging.LocaleItemQueryParams{
+		Content: "",
+		Key:     "ALERT_ERROR",
+		Lang:    "",
+		Limit:   0,
+		Offset:  0,
+	}
+
+	reqBody, err := json.Marshal(localeItemQueryParams)
+	if err != nil {
+		t.Errorf("Error on parsing request body: %v", err)
+	}
+
+	req, _ := http.NewRequest("POST", "/api/v1/locale-items/message", bytes.NewBuffer(reqBody))
+	req.Header.Add("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	reId := regexp.MustCompile(`"id":"\d+",`)
+	compareJsonWithoutId := string(reId.ReplaceAll([]byte(compareJson), []byte("")))
+	bodyWithoutId := string(reId.ReplaceAll([]byte(w.Body.String()), []byte("")))
+
+	assert.JSONEq(t, compareJsonWithoutId, bodyWithoutId)
 }
 
 func testDeleteLangByBundle(t *testing.T) {
@@ -249,7 +314,7 @@ func testDeleteLangByBundle(t *testing.T) {
 	r.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.JSONEq(t, `{
-		"num_successfull": 1,
+		"num_successful": 1,
 		"num_failed": 0
 	}`, w.Body.String())
 
@@ -258,7 +323,7 @@ func testDeleteLangByBundle(t *testing.T) {
 	r.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.JSONEq(t, `{
-		"num_successfull": 0,
+		"num_successful": 0,
 		"num_failed": 0
 	}`, w.Body.String())
 
@@ -267,7 +332,16 @@ func testDeleteLangByBundle(t *testing.T) {
 	r.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.JSONEq(t, `{
-		"num_successfull": 0,
+		"num_successful": 0,
+		"num_failed": 0
+	}`, w.Body.String())
+
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest("DELETE", "/api/v1/locale-items/label", nil)
+	r.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.JSONEq(t, `{
+		"num_successful": 4,
 		"num_failed": 0
 	}`, w.Body.String())
 }

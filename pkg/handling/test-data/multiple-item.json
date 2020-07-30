@@ -2,18 +2,6 @@
     {
         "bundle": "label",
         "key": "@HELLO_TEST@",
-        "lang": "it-IT",
-        "content": "Questo è un test"
-    },
-    {
-        "bundle": "label",
-        "key": "@HELLO_TEST_2@",
-        "lang": "it-IT",
-        "content": "Questo è un secondo test"
-    },
-    {
-        "bundle": "label",
-        "key": "@HELLO_TEST@",
         "lang": "en-US",
         "content": "This is a test"
     },
@@ -22,5 +10,17 @@
         "key": "@HELLO_TEST_2@",
         "lang": "en-US",
         "content": "This is a second test"
+    },
+    {
+        "bundle": "label",
+        "key": "@HELLO_TEST@",
+        "lang": "it-IT",
+        "content": "Questo è un test"
+    },
+    {
+        "bundle": "label",
+        "key": "@HELLO_TEST_2@",
+        "lang": "it-IT",
+        "content": "Questo è un secondo test"
     }
 ]
