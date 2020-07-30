@@ -31,16 +31,16 @@ type ErrorMessage struct {
 }
 
 type MassiveResult struct {
-	NumSuccessfull int64 `json:"num_successfull"`
+	NumSuccessfull int64 `json:"num_successful"`
 	NumFailed      int64 `json:"num_failed"`
 }
 
 type LocaleItemQueryParams struct {
-	Lang    string `form:"lang"`
-	Content string `form:"content"`
-	Key     string `form:"key"`
-	Offset  int    `form:"offset"`
-	Limit   int    `form:"limit"`
+	Lang    string `json:"lang"`
+	Content string `json:"content"`
+	Key     string `json:"key"`
+	Offset  int    `json:"offset"`
+	Limit   int    `json:"limit"`
 }
 
 //LocalePersistencer interface for persistence service
