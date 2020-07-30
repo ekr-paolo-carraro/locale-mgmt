@@ -121,7 +121,7 @@ func (lps LocalePersistenceService) GetLocaleItems(key, bundle, lang, content st
 	return items, nil
 }
 
-//GetLocaleItem return one localeitem for key, bundle, lang
+//GetLocaleItem return one localeitem by key
 func (lps LocalePersistenceService) GetLocaleItem(id string) (*LocaleItem, error) {
 	selectStmt := "SELECT id, bundle, lang, key, content FROM localeitems WHERE id = $1"
 
@@ -183,7 +183,7 @@ func evaluateLocaleItemParams(key, bundle, lang, content string, limit, offset i
 	}
 	if content != "" {
 		placeHolderCounter++
-		statement += " localeitems.lang LIKE $" + strconv.Itoa(placeHolderCounter) + " AND"
+		statement += " localeitems.content LIKE $" + strconv.Itoa(placeHolderCounter) + " AND"
 		params = append(params, "%"+content+"%")
 	}
 
